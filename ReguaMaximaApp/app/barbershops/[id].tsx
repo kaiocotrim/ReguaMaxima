@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { SideMenu } from "../_components/SideMenu";
 import { BookingSheet } from "../_components/BookingSheet";
+import { BarbersSheet } from "../_components/BarbersSheet";
 import { type AuthUser, getStoredUser } from "../../services/auth";
 import {
   type BarbershopDetails,
@@ -66,7 +67,12 @@ function ServiceCard({
   onSchedule: () => void;
 }) {
   return (
-    <View
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={acceptsBookings ? `Agendar ${service.name}` : `${service.name} indisponível`}
+      accessibilityState={{ disabled: !acceptsBookings }}
+      disabled={!acceptsBookings}
+      onPress={onSchedule}
       className="mb-4 flex-row rounded-[18px] border border-[#E2E5E3] bg-white p-3"
       style={{
         shadowColor: "#254F50",
@@ -120,7 +126,10 @@ function ServiceCard({
             accessibilityRole="button"
             accessibilityLabel={`Agendar ${service.name}`}
             disabled={!acceptsBookings}
-            onPress={onSchedule}
+            onPress={(event) => {
+              event.stopPropagation();
+              onSchedule();
+            }}
             className={`h-8 items-center justify-center rounded-[10px] px-5 active:opacity-70 ${acceptsBookings ? "bg-[#B8F51C]" : "bg-[#DDE1DF]"}`}
           >
             <Text
@@ -132,7 +141,7 @@ function ServiceCard({
           </Pressable>
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -143,6 +152,7 @@ export default function BarbershopPage() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [tab, setTab] = useState<"services" | "reviews">("services");
   const [menuVisible, setMenuVisible] = useState(false);
+  const [barbersVisible, setBarbersVisible] = useState(false);
   const [selectedService, setSelectedService] = useState<
     BarbershopDetails["services"][number] | null
   >(null);
@@ -285,6 +295,11 @@ export default function BarbershopPage() {
         barbers={barbershop.barbers}
         onClose={() => setSelectedService(null)}
       />
+      <BarbersSheet
+        visible={barbersVisible}
+        barbers={barbershop.barbers}
+        onClose={() => setBarbersVisible(false)}
+      />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -402,6 +417,7 @@ export default function BarbershopPage() {
               <ActionButton
                 icon="person-circle-outline"
                 label={`${barbershop.barbers.length} ${barbershop.barbers.length === 1 ? "barbeiro" : "barbeiros"}`}
+                onPress={() => setBarbersVisible(true)}
               />
             </View>
           </View>

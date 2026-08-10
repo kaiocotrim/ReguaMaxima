@@ -200,69 +200,77 @@ function BarberCard({
   }, [index, opacity, reduceMotion, translateY]);
 
   return (
-    <Animated.View
-      className="mb-4 w-[48.5%] overflow-hidden rounded-[18px] border border-[#E3E6E4] bg-white p-2"
-      style={{
-        opacity,
-        transform: [{ translateY }],
-        shadowColor: "#163E3F",
-        shadowOffset: { width: 0, height: 5 },
-        shadowOpacity: 0.07,
-        shadowRadius: 12,
-        elevation: 2,
-      }}
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Abrir ${item.name}`}
+      onPress={() => router.push(`/barbershops/${item.id}` as Href)}
+      className="mb-4 w-[48.5%] active:opacity-80"
     >
-      <View className="relative h-[136px] overflow-hidden rounded-[14px] bg-[#E8ECE9]">
-        <Image
-          source={{ uri: item.imageUrl }}
-          contentFit="cover"
-          transition={180}
-          style={{ width: "100%", height: "100%" }}
-        />
-        <View className="absolute left-2 top-2 flex-row items-center rounded-full bg-[#B8F51C] px-2 py-1">
-          <Ionicons name="star" size={12} color={BRAND} />
-          <Text
-            className="ml-1 text-[12px] font-extrabold text-[#254F50]"
-            style={{ fontFamily: "Satoshi-Bold" }}
-          >
-            {rating}
-          </Text>
+      <Animated.View
+        className="overflow-hidden rounded-[18px] border border-[#E3E6E4] bg-white p-2"
+        style={{
+          opacity,
+          transform: [{ translateY }],
+          shadowColor: "#163E3F",
+          shadowOffset: { width: 0, height: 5 },
+          shadowOpacity: 0.07,
+          shadowRadius: 12,
+          elevation: 2,
+        }}
+      >
+        <View className="relative h-[136px] overflow-hidden rounded-[14px] bg-[#E8ECE9]">
+          <Image
+            source={{ uri: item.imageUrl }}
+            contentFit="cover"
+            transition={180}
+            style={{ width: "100%", height: "100%" }}
+          />
+          <View className="absolute left-2 top-2 flex-row items-center rounded-full bg-[#B8F51C] px-2 py-1">
+            <Ionicons name="star" size={12} color={BRAND} />
+            <Text
+              className="ml-1 text-[12px] font-extrabold text-[#254F50]"
+              style={{ fontFamily: "Satoshi-Bold" }}
+            >
+              {rating}
+            </Text>
+          </View>
         </View>
-      </View>
 
-      <View className="px-1 pb-1 pt-3">
-        <Text
-          numberOfLines={1}
-          className="text-[14px] font-extrabold text-[#173F40]"
-          style={{ fontFamily: "Satoshi-Bold" }}
-        >
-          {item.name}
-        </Text>
-        <Text
-          numberOfLines={1}
-          className="mt-0.5 text-[13px] text-[#727A78]"
-          style={{ fontFamily: "Satoshi-Regular" }}
-        >
-          {item.address}
-        </Text>
-        <FluidPressable
-          haptic
-          accessibilityLabel={`Agendar na ${item.name}`}
-          onPress={() =>
-            router.push(`/barbershops/${item.id}` as Href)
-          }
-          className="mt-3 h-[34px] flex-row items-center justify-center rounded-[10px] bg-[#B8F51C]"
-        >
+        <View className="px-1 pb-1 pt-3">
           <Text
-            className="text-[13px] font-extrabold text-[#254F50]"
+            numberOfLines={1}
+            className="text-[14px] font-extrabold text-[#173F40]"
             style={{ fontFamily: "Satoshi-Bold" }}
           >
-            Agendar
+            {item.name}
           </Text>
-          <Ionicons name="chevron-forward" size={17} color={BRAND} style={{ marginLeft: 8 }} />
-        </FluidPressable>
-      </View>
-    </Animated.View>
+          <Text
+            numberOfLines={1}
+            className="mt-0.5 text-[13px] text-[#727A78]"
+            style={{ fontFamily: "Satoshi-Regular" }}
+          >
+            {item.address}
+          </Text>
+          <FluidPressable
+            haptic
+            accessibilityLabel={`Agendar na ${item.name}`}
+            onPress={(event) => {
+              event.stopPropagation();
+              router.push(`/barbershops/${item.id}` as Href);
+            }}
+            className="mt-3 h-[34px] flex-row items-center justify-center rounded-[10px] bg-[#B8F51C]"
+          >
+            <Text
+              className="text-[13px] font-extrabold text-[#254F50]"
+              style={{ fontFamily: "Satoshi-Bold" }}
+            >
+              Agendar
+            </Text>
+            <Ionicons name="chevron-forward" size={17} color={BRAND} style={{ marginLeft: 8 }} />
+          </FluidPressable>
+        </View>
+      </Animated.View>
+    </Pressable>
   );
 }
 

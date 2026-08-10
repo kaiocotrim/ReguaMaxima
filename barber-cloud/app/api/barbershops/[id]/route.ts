@@ -59,6 +59,7 @@ export async function GET(
             nome: true,
             avatar: true,
             user: { select: { name: true, image: true } },
+            reviews: { select: { rating: true } },
           },
         },
         reviews: {
@@ -93,11 +94,18 @@ export async function GET(
           ...service,
           price: Number(service.price),
         })),
-        barbers: barbershop.barbers.map((barber) => ({
-          id: barber.id,
-          name: barber.nome ?? barber.user.name ?? "Barbeiro",
-          avatar: barber.avatar ?? barber.user.image,
-        })),
+        barbers: barbershop.barbers.map((barber) => {
+          const ratings = barber.reviews.map(({ rating }) => rating)
+          return {
+            id: barber.id,
+            name: barber.nome ?? barber.user.name ?? "Barbeiro",
+            avatar: barber.avatar ?? barber.user.image,
+            reviewCount: ratings.length,
+            averageRating: ratings.length
+              ? ratings.reduce((total, rating) => total + rating, 0) / ratings.length
+              : null,
+          }
+        }),
         reviews: barbershop.reviews.map((review) => ({
           id: review.id,
           rating: review.rating,

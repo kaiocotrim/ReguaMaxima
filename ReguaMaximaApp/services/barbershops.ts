@@ -28,6 +28,8 @@ export type BarbershopDetails = Barbershop & {
     id: string;
     name: string;
     avatar: string | null;
+    averageRating: number | null;
+    reviewCount: number;
   }[];
   reviews: {
     id: string;
