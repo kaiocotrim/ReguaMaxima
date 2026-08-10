@@ -9,7 +9,7 @@ import { Badge } from "./ui/badge"
 import { Avatar, AvatarImage } from "./ui/avatar"
 import BarbershopItem from "./barbershop-item"
 import SearchBar from "./SearchBar"
-import { MapPin } from "lucide-react"
+import { CalendarDays, ChevronRight, Heart, MapPin, Star } from "lucide-react"
 import { motion } from "framer-motion"
 import { useSession } from "next-auth/react"
 import { format } from "date-fns"
@@ -53,6 +53,7 @@ type BookingCard = {
     name: string
   }
   barbershop: {
+    id: string
     name: string
     imageUrl: string
   }
@@ -69,6 +70,7 @@ type BarbershopCard = {
 interface HomeClientProps {
   barbershops: BarbershopCard[]
   popularBarbershops: BarbershopCard[]
+  favoriteBarbershops: BarbershopCard[]
   confirmedBookings: BookingCard[]
   pendingReviews: PendingReview[]
   loading?: boolean
@@ -77,6 +79,7 @@ interface HomeClientProps {
 export default function HomeClient({
   barbershops,
   popularBarbershops,
+  favoriteBarbershops,
   confirmedBookings,
   pendingReviews,
   loading,
@@ -104,6 +107,8 @@ export default function HomeClient({
       ? "/bannerReguaM-dark1.png"
       : "/bannerReguaM-light1.png"
 
+  const nextBooking = confirmedBookings[0]
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -113,7 +118,7 @@ export default function HomeClient({
   }
 
   return (
-    <div className="relative min-h-screen overflow-x-clip bg-background">
+    <div className="bg-background relative min-h-screen overflow-x-clip">
       <BackgroundEffects />
       <Header />
 
@@ -137,7 +142,7 @@ export default function HomeClient({
             </span>
           </h2>
 
-          <p className="text-sm capitalize text-muted-foreground">
+          <p className="text-muted-foreground text-sm capitalize">
             {format(new Date(), "EEEE, dd 'de' MMMM", {
               locale: ptBR,
             })}
@@ -154,7 +159,7 @@ export default function HomeClient({
           <SearchBar />
         </motion.div>
 
-         {/* Busca rápida */}
+        {/* Busca rápida */}
         <motion.div
           className="mt-6 flex gap-3 overflow-x-auto pb-1 lg:flex-wrap lg:justify-center lg:overflow-visible [&::-webkit-scrollbar]:hidden"
           variants={fadeUp}
@@ -205,7 +210,7 @@ export default function HomeClient({
                       `/barbershops?service=${encodeURIComponent(service ?? "")}`,
                   )
                 }
-                className="cursor-pointer gap-1 whitespace-nowrap p-4 bg-card hover:bg-[#C3F32C] dark:bg-secondary"
+                className="bg-card dark:bg-secondary cursor-pointer gap-1 p-4 whitespace-nowrap hover:bg-[#C3F32C]"
                 variant="secondary"
               >
                 <span
@@ -229,13 +234,164 @@ export default function HomeClient({
           ))}
         </motion.div>
 
-        {/* Banner Dinâmico */}
         <motion.div
-          className="relative h-[150px] w-full overflow-hidden rounded-2xl border border-border/50 shadow-sm sm:h-[230px] lg:aspect-[1983/793] lg:h-auto lg:rounded-3xl"
+          className="hidden gap-3 lg:grid lg:grid-cols-[1.08fr_0.92fr]"
           variants={fadeUp}
           initial="hidden"
           animate="show"
           custom={3}
+        >
+          <section className="border-border/70 bg-card/90 min-h-[212px] rounded-2xl border p-7 shadow-sm backdrop-blur-sm">
+            <h2 className="mb-5 text-xl font-semibold tracking-tight">
+              Último agendamento
+            </h2>
+
+            {nextBooking ? (
+              <button
+                type="button"
+                onClick={() =>
+                  router.push(`/barbershops/${nextBooking.barbershop.id}`)
+                }
+                className="group bg-background/70 flex w-full cursor-pointer items-center gap-4 rounded-2xl border border-[#a9cf44]/70 p-4 text-left transition-[border-color,background-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-[#8db719] hover:bg-[#f8fdea] hover:shadow-md focus-visible:ring-2 focus-visible:ring-[#9bc826] focus-visible:ring-offset-2 focus-visible:outline-none dark:hover:bg-[#1d2918]"
+              >
+                <Avatar className="bg-muted size-20 shrink-0 border-2 border-[#9bc826]">
+                  <AvatarImage
+                    src={nextBooking.barbershop.imageUrl}
+                    alt={nextBooking.barbershop.name}
+                    className="object-cover"
+                  />
+                </Avatar>
+
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-lg font-semibold">
+                    {nextBooking.barbershop.name}
+                  </p>
+                  <p className="text-muted-foreground mt-1 truncate text-sm">
+                    {nextBooking.service.name}
+                  </p>
+                  <p className="text-muted-foreground mt-1 text-sm font-medium capitalize">
+                    {format(
+                      new Date(nextBooking.date),
+                      "dd 'de' MMMM · HH:mm",
+                      {
+                        locale: ptBR,
+                      },
+                    )}
+                  </p>
+                </div>
+
+                <span className="flex size-14 shrink-0 items-center justify-center rounded-full bg-[#254F50] text-[#C3F32C] transition-transform duration-200 group-hover:translate-x-1">
+                  <ChevronRight className="size-7" strokeWidth={2.25} />
+                </span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => router.push("/barbershops")}
+                className="border-border bg-background/60 flex min-h-[112px] w-full cursor-pointer items-center gap-4 rounded-2xl border border-dashed p-5 text-left transition-colors hover:border-[#9bc826]/70 hover:bg-[#f8fdea] dark:hover:bg-[#1d2918]"
+              >
+                <span className="flex size-12 items-center justify-center rounded-full bg-[#C3F32C]/20 text-[#597214]">
+                  <CalendarDays className="size-6" />
+                </span>
+                <span>
+                  <strong className="block font-semibold">
+                    Nenhum agendamento futuro
+                  </strong>
+                  <span className="text-muted-foreground mt-1 block text-sm">
+                    Encontre uma barbearia para agendar.
+                  </span>
+                </span>
+              </button>
+            )}
+          </section>
+
+          <section className="border-border/70 bg-card/90 min-h-[212px] rounded-2xl border p-7 shadow-sm backdrop-blur-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold tracking-tight">
+                Favoritos
+              </h2>
+              <button
+                type="button"
+                onClick={() => router.push("/favorites")}
+                className="cursor-pointer text-sm font-semibold text-[#84ad11] transition-colors hover:text-[#62830a] focus-visible:ring-2 focus-visible:ring-[#9bc826] focus-visible:outline-none dark:text-[#C3F32C]"
+              >
+                Editar
+              </button>
+            </div>
+
+            {favoriteBarbershops.length > 0 ? (
+              <div className="grid grid-cols-3 gap-3">
+                {favoriteBarbershops.map((barbershop) => {
+                  const averageRating = barbershop.reviews.length
+                    ? barbershop.reviews.reduce(
+                        (sum, review) => sum + review.rating,
+                        0,
+                      ) / barbershop.reviews.length
+                    : null
+
+                  return (
+                    <button
+                      type="button"
+                      key={barbershop.id}
+                      onClick={() =>
+                        router.push(`/barbershops/${barbershop.id}`)
+                      }
+                      className="group flex min-w-0 cursor-pointer flex-col items-center rounded-xl px-1 py-1 text-center focus-visible:ring-2 focus-visible:ring-[#9bc826] focus-visible:outline-none"
+                    >
+                      <span className="relative mb-2 block size-[84px]">
+                        <span className="bg-muted relative block size-full overflow-hidden rounded-full border-2 border-[#9bc826] shadow-sm transition-transform duration-200 group-hover:scale-[1.04]">
+                          <Image
+                            src={barbershop.imageUrl}
+                            alt={barbershop.name}
+                            fill
+                            sizes="84px"
+                            className="object-cover"
+                          />
+                        </span>
+
+                        {averageRating !== null && (
+                          <span className="absolute -top-1 -right-2 inline-flex items-center gap-0.5 rounded-full bg-[#254F50] px-2 py-1 text-[11px] font-bold text-white shadow-sm">
+                            <Star className="size-3 fill-[#C3F32C] text-[#C3F32C]" />
+                            {averageRating.toFixed(1)}
+                          </span>
+                        )}
+
+                        <span className="border-card absolute -right-1 -bottom-1 flex size-8 items-center justify-center rounded-full border-2 bg-[#254F50] shadow-sm">
+                          <Heart className="size-4 fill-[#C3F32C] text-[#C3F32C]" />
+                        </span>
+                      </span>
+                      <span className="line-clamp-2 text-sm leading-tight font-semibold">
+                        {barbershop.name}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => router.push("/barbershops")}
+                className="border-border flex min-h-[124px] w-full cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed px-4 text-center transition-colors hover:border-[#9bc826]/70 hover:bg-[#f8fdea] dark:hover:bg-[#1d2918]"
+              >
+                <Heart className="mb-2 size-6 text-[#9bc826]" />
+                <strong className="text-sm font-semibold">
+                  Salve suas barbearias preferidas
+                </strong>
+                <span className="text-muted-foreground mt-1 text-xs">
+                  Elas aparecerão aqui para acesso rápido.
+                </span>
+              </button>
+            )}
+          </section>
+        </motion.div>
+
+        {/* Banner Dinâmico */}
+        <motion.div
+          className="border-border/50 relative h-[150px] w-full overflow-hidden rounded-2xl border shadow-sm sm:h-[230px] lg:aspect-[1983/793] lg:h-auto lg:rounded-3xl"
+          variants={fadeUp}
+          initial="hidden"
+          animate="show"
+          custom={4}
           whileHover={{ scale: 1.015 }}
           transition={{
             type: "spring",
@@ -273,7 +429,7 @@ export default function HomeClient({
 
           {/* ✅ Agendamentos — só aparece se tiver algum */}
           {confirmedBookings.length > 0 && (
-            <>
+            <div className="space-y-6 lg:hidden">
               <motion.h2
                 className="text-xs font-bold uppercase"
                 variants={fadeIn}
@@ -300,7 +456,7 @@ export default function HomeClient({
                         className="basis-[90%] pl-2 sm:basis-[60%] lg:basis-1/2 xl:basis-1/3"
                       >
                         <Card
-                          className="cursor-pointer dark:hover:bg-[#262626] hover:bg-black hover:bg-[#E6F4D4] "
+                          className="cursor-pointer hover:bg-[#E6F4D4] hover:bg-black dark:hover:bg-[#262626]"
                           onClick={() => router.push(`/appointments`)}
                         >
                           <CardContent className="flex justify-between p-0">
@@ -347,7 +503,7 @@ export default function HomeClient({
                   </CarouselContent>
                 </Carousel>
               </motion.div>
-            </>
+            </div>
           )}
 
           {/* Recomendações */}
@@ -371,7 +527,7 @@ export default function HomeClient({
             >
               <button
                 type="button"
-                className="cursor-pointer text-muted-foreground transition-colors hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
                 onClick={() => router.push("/barbershops")}
               >
                 Todas
@@ -422,7 +578,7 @@ export default function HomeClient({
             </motion.h2>
             <motion.button
               type="button"
-              className="cursor-pointer text-xs font-bold uppercase text-muted-foreground transition-colors hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground cursor-pointer text-xs font-bold uppercase transition-colors"
               variants={fadeIn}
               initial="hidden"
               animate="show"

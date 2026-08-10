@@ -41,7 +41,10 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full custom-scrollbar overflow-y-auto">
+      <body
+        className="min-h-full custom-scrollbar overflow-y-auto"
+        suppressHydrationWarning
+      >
         <ThemeProvider>
           <div className="flex min-h-dvh w-full flex-col">
             <AuthProvider>

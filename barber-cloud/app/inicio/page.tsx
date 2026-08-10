@@ -173,7 +173,6 @@
 //   )
 // }
 
-
 // import { db } from "./_lib/prisma"
 // import HomeClient from "./_components/HomeClient"
 // import { authOptions } from "./_providers/auth"
@@ -257,12 +256,24 @@ export default async function Home() {
           service: { select: { name: true } },
           barbershop: {
             select: {
+              id: true,
               name: true,
               imageUrl: true,
             },
           },
         },
         orderBy: { date: "asc" },
+      })
+    : []
+
+  const favoriteBarbershops = session?.user?.id
+    ? await db.favoriteBarbershop.findMany({
+        where: { userId: session.user.id },
+        orderBy: { createdAt: "desc" },
+        take: 3,
+        select: {
+          barbershop: { select: barbershopCardSelect },
+        },
       })
     : []
 
@@ -292,11 +303,15 @@ export default async function Home() {
     <HomeClient
       barbershops={barbershops}
       popularBarbershops={popularBarbershops}
+      favoriteBarbershops={favoriteBarbershops.map(
+        ({ barbershop }) => barbershop,
+      )}
       confirmedBookings={confirmedBookings.map((booking) => ({
         id: booking.id,
         date: booking.date.toISOString(),
         service: { name: booking.service.name },
         barbershop: {
+          id: booking.barbershop.id,
           name: booking.barbershop.name,
           imageUrl: booking.barbershop.imageUrl,
         },
