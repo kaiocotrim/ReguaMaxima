@@ -466,12 +466,10 @@ export async function getAvailableTimesForBarber(
   }
 }
 
-export async function createBooking(data: BookingInput) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user?.id) {
-    return { success: false as const, error: "Faça login para agendar." }
-  }
-
+export async function createBookingForUser(
+  userId: string,
+  data: BookingInput,
+) {
   let requestedDate: Date
 
   try {
@@ -581,7 +579,7 @@ export async function createBooking(data: BookingInput) {
                 durationMinutes:
                   barber.serviceConfigs[0]?.customDuration ??
                   selectedService.duration,
-                user: { connect: { id: session.user.id } },
+                user: { connect: { id: userId } },
                 barbershop: { connect: { id: data.barbershopId } },
                 service: { connect: { id: data.serviceId } },
                 barber: { connect: { id: data.barberId } },
@@ -604,7 +602,7 @@ export async function createBooking(data: BookingInput) {
               const previous = await tx.booking.updateMany({
                 where: {
                   id: data.rescheduleBookingId,
-                  userId: session.user.id,
+                  userId,
                   status: "EM_ANDAMENTO",
                   date: { gt: new Date() },
                 },
@@ -622,7 +620,7 @@ export async function createBooking(data: BookingInput) {
               await tx.auditLog.create({
                 data: {
                   barbershopId: data.barbershopId,
-                  actorId: session.user.id,
+                  actorId: userId,
                   action: "BOOKING_RESCHEDULED",
                   entityType: "Booking",
                   entityId: created.id,
@@ -694,4 +692,13 @@ export async function createBooking(data: BookingInput) {
           : "Não foi possível concluir o agendamento.",
     }
   }
+}
+
+export async function createBooking(data: BookingInput) {
+  const session = await getServerSession(authOptions)
+  if (!session?.user?.id) {
+    return { success: false as const, error: "Faça login para agendar." }
+  }
+
+  return createBookingForUser(session.user.id, data)
 }

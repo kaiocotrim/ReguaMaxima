@@ -1,14 +1,13 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
-import { router } from "expo-router";
+import { type Href, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import type { PropsWithChildren } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AccessibilityInfo,
   ActivityIndicator,
-  Alert,
   Animated,
   type GestureResponderEvent,
   Pressable,
@@ -22,9 +21,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import {
   type AuthUser,
-  clearSession,
   getStoredUser,
 } from "../services/auth";
+import { SideMenu } from "./_components/SideMenu";
 import {
   type Barbershop,
   listBarbershops,
@@ -33,6 +32,14 @@ import {
 const BRAND = "#254F50";
 const LIME = "#B8F51C";
 const SITE = "https://reguamaxima.cotrimdev.com.br";
+
+async function selectionFeedback() {
+  try {
+    await Haptics.selectionAsync();
+  } catch {
+    // O feedback tátil é opcional e não pode interromper a ação principal.
+  }
+}
 
 function capitalizeFirst(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1);
@@ -80,7 +87,7 @@ function FluidPressable({
         onPressIn={() => animateScale(0.97)}
         onPressOut={() => animateScale(1)}
         onPress={(event) => {
-          if (haptic) void Haptics.selectionAsync();
+          if (haptic) void selectionFeedback();
           onPress?.(event);
         }}
         className={className}
@@ -178,6 +185,9 @@ function BarberCard({
         <FluidPressable
           haptic
           accessibilityLabel={`Agendar na ${item.name}`}
+          onPress={() =>
+            router.push(`/barbershops/${item.id}` as Href)
+          }
           className="mt-3 h-[34px] flex-row items-center justify-center rounded-[10px] bg-[#B8F51C]"
         >
           <Text
@@ -203,6 +213,7 @@ export default function Home() {
   const [error, setError] = useState("");
   const [reduceMotion, setReduceMotion] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [menuVisible, setMenuVisible] = useState(false);
 
   const today = capitalizeFirst(
     new Intl.DateTimeFormat("pt-BR", {
@@ -258,22 +269,19 @@ export default function Home() {
     void loadInitialBarbershops();
   }, []);
 
-  async function handleLogout() {
-    await clearSession();
-    router.replace("/");
-  }
-
   function openMenu() {
-    void Haptics.selectionAsync();
-    Alert.alert("Menu", "O que você deseja fazer?", [
-      { text: "Cancelar", style: "cancel" },
-      { text: "Sair da conta", style: "destructive", onPress: () => void handleLogout() },
-    ]);
+    void selectionFeedback();
+    setMenuVisible(true);
   }
 
   return (
     <View className="flex-1 bg-[#F7F7F7]">
       <StatusBar style="dark" />
+      <SideMenu
+        visible={menuVisible}
+        user={user}
+        onClose={() => setMenuVisible(false)}
+      />
       <View
         style={{
           paddingTop: insets.top,
