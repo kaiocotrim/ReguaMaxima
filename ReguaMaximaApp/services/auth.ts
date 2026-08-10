@@ -230,9 +230,6 @@ async function parseJsonResponse(
 ): Promise<MobileAuthResponse> {
   const responseText = await response.text();
 
-  console.log("Status da API:", response.status);
-  console.log("Resposta da API:", responseText);
-
   try {
     return JSON.parse(responseText) as MobileAuthResponse;
   } catch {
@@ -373,6 +370,52 @@ export async function getAccessToken() {
   return SecureStore.getItemAsync(
     STORAGE_KEYS.accessToken,
   );
+}
+
+let refreshSessionPromise: Promise<MobileSessionData> | null = null;
+
+async function refreshMobileSession() {
+  const refreshToken = await getRefreshToken();
+  if (!refreshToken) {
+    throw new Error("Sua sessão expirou. Entre novamente.");
+  }
+
+  const response = await fetch(`${API_URL}/api/mobile/auth/refresh`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ refreshToken }),
+  });
+  const data = await parseJsonResponse(response);
+  if (!response.ok || !data.data) {
+    await clearSession();
+    throw new Error(data.error || "Sua sessão expirou. Entre novamente.");
+  }
+
+  await saveSession(data.data);
+  return data.data;
+}
+
+export async function getValidAccessToken() {
+  const [accessToken, expiresAt] = await Promise.all([
+    getAccessToken(),
+    getAccessTokenExpiresAt(),
+  ]);
+  const expiresAtTime = expiresAt ? new Date(expiresAt).getTime() : 0;
+
+  if (accessToken && expiresAtTime > Date.now() + 30_000) {
+    return accessToken;
+  }
+
+  if (!refreshSessionPromise) {
+    refreshSessionPromise = refreshMobileSession().finally(() => {
+      refreshSessionPromise = null;
+    });
+  }
+
+  return (await refreshSessionPromise).accessToken;
 }
 
 export async function getRefreshToken() {

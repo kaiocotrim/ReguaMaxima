@@ -1,4 +1,4 @@
-import { getAccessToken } from "./auth";
+import { getValidAccessToken } from "./auth";
 import type { Barbershop } from "./barbershops";
 
 const API_URL = "https://reguamaxima.cotrimdev.com.br";
@@ -36,8 +36,7 @@ async function parseResponse<T>(response: Response) {
 }
 
 async function authenticatedRequest(path: string, init?: RequestInit) {
-  const accessToken = await getAccessToken();
-  if (!accessToken) throw new Error("Sua sessão expirou. Entre novamente.");
+  const accessToken = await getValidAccessToken();
   return fetch(`${API_URL}${path}`, {
     ...init,
     headers: {

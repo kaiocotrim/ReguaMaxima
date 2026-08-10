@@ -1,4 +1,4 @@
-import { getAccessToken } from "./auth";
+import { getValidAccessToken } from "./auth";
 
 const API_URL = "https://reguamaxima.cotrimdev.com.br";
 
@@ -139,7 +139,7 @@ export async function createBooking(input: {
   date: string;
   time: string;
 }) {
-  const accessToken = await getAccessToken();
+  const accessToken = await getValidAccessToken();
   if (!accessToken) throw new Error("Sua sessão expirou. Entre novamente.");
 
   const response = await fetch(`${API_URL}/api/mobile/bookings`, {
@@ -159,8 +159,7 @@ export async function createBooking(input: {
 }
 
 export async function listUpcomingBookings() {
-  const accessToken = await getAccessToken();
-  if (!accessToken) return [];
+  const accessToken = await getValidAccessToken();
 
   const response = await fetch(`${API_URL}/api/mobile/bookings`, {
     headers: {
@@ -176,7 +175,7 @@ export async function listUpcomingBookings() {
 }
 
 export async function listAppointments() {
-  const accessToken = await getAccessToken();
+  const accessToken = await getValidAccessToken();
   if (!accessToken) throw new Error("Sua sessão expirou. Entre novamente.");
 
   const response = await fetch(`${API_URL}/api/mobile/bookings?scope=all`, {
@@ -193,7 +192,7 @@ export async function listAppointments() {
 }
 
 export async function cancelBooking(bookingId: string) {
-  const accessToken = await getAccessToken();
+  const accessToken = await getValidAccessToken();
   if (!accessToken) throw new Error("Sua sessão expirou. Entre novamente.");
 
   const response = await fetch(
