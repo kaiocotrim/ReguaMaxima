@@ -27,24 +27,41 @@ export async function GET(request: Request) {
   }
 
   try {
+    const scope = new URL(request.url).searchParams.get("scope")
+    const includeHistory = scope === "all"
     const bookings = await db.booking.findMany({
-      where: {
-        userId: authenticated.user.id,
-        status: "EM_ANDAMENTO",
-        date: { gte: new Date() },
-      },
-      orderBy: { date: "asc" },
-      take: 10,
+      where: includeHistory
+        ? { userId: authenticated.user.id }
+        : {
+            userId: authenticated.user.id,
+            status: "EM_ANDAMENTO",
+            date: { gte: new Date() },
+          },
+      orderBy: { date: includeHistory ? "desc" : "asc" },
+      take: includeHistory ? 50 : 10,
       select: {
         id: true,
         date: true,
         status: true,
-        service: { select: { name: true } },
+        durationMinutes: true,
+        agreedPrice: true,
+        service: {
+          select: { id: true, name: true, price: true, duration: true },
+        },
         barbershop: {
           select: {
             id: true,
             name: true,
             imageUrl: true,
+            address: true,
+          },
+        },
+        barber: {
+          select: {
+            id: true,
+            nome: true,
+            avatar: true,
+            user: { select: { name: true, image: true } },
           },
         },
       },
@@ -54,6 +71,13 @@ export async function GET(request: Request) {
       data: bookings.map((booking) => ({
         ...booking,
         date: booking.date.toISOString(),
+        agreedPrice: booking.agreedPrice
+          ? Number(booking.agreedPrice)
+          : Number(booking.service.price),
+        service: {
+          ...booking.service,
+          price: Number(booking.service.price),
+        },
       })),
     })
   } catch (error) {

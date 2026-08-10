@@ -28,8 +28,41 @@ export type UpcomingBooking = {
   };
 };
 
+export type AppointmentStatus = "EM_ANDAMENTO" | "CONCLUIDO" | "CANCELADO";
+
+export type Appointment = {
+  id: string;
+  date: string;
+  status: AppointmentStatus;
+  durationMinutes?: number | null;
+  agreedPrice?: number;
+  service: { id?: string; name: string; price?: number; duration?: number };
+  barbershop: {
+    id: string;
+    name: string;
+    imageUrl: string;
+    address?: string;
+  };
+  barber?: {
+    id: string;
+    nome: string | null;
+    avatar: string | null;
+    user: { name: string; image: string | null };
+  };
+};
+
 type UpcomingBookingsResponse = {
   data?: UpcomingBooking[];
+  error?: string;
+};
+
+type AppointmentsResponse = {
+  data?: Appointment[];
+  error?: string;
+};
+
+type CancelBookingResponse = {
+  data?: { bookingId: string; status: "CANCELADO" };
   error?: string;
 };
 
@@ -138,6 +171,44 @@ export async function listUpcomingBookings() {
   const data = await parseResponse<UpcomingBookingsResponse>(response);
   if (!response.ok || !data.data) {
     throw new Error(data.error || "Não foi possível carregar seus agendamentos.");
+  }
+  return data.data;
+}
+
+export async function listAppointments() {
+  const accessToken = await getAccessToken();
+  if (!accessToken) throw new Error("Sua sessão expirou. Entre novamente.");
+
+  const response = await fetch(`${API_URL}/api/mobile/bookings?scope=all`, {
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  const data = await parseResponse<AppointmentsResponse>(response);
+  if (!response.ok || !data.data) {
+    throw new Error(data.error || "Não foi possível carregar seus agendamentos.");
+  }
+  return data.data;
+}
+
+export async function cancelBooking(bookingId: string) {
+  const accessToken = await getAccessToken();
+  if (!accessToken) throw new Error("Sua sessão expirou. Entre novamente.");
+
+  const response = await fetch(
+    `${API_URL}/api/mobile/bookings/${encodeURIComponent(bookingId)}`,
+    {
+      method: "DELETE",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  );
+  const data = await parseResponse<CancelBookingResponse>(response);
+  if (!response.ok || !data.data) {
+    throw new Error(data.error || "Não foi possível cancelar o agendamento.");
   }
   return data.data;
 }

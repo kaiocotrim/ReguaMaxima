@@ -23,6 +23,10 @@ import {
   type BarbershopDetails,
   getBarbershop,
 } from "../../services/barbershops";
+import {
+  listFavorites,
+  toggleFavoriteBarbershop,
+} from "../../services/favorites";
 
 const BRAND = "#254F50";
 
@@ -143,6 +147,7 @@ export default function BarbershopPage() {
     BarbershopDetails["services"][number] | null
   >(null);
   const [favorite, setFavorite] = useState(false);
+  const [updatingFavorite, setUpdatingFavorite] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
@@ -165,9 +170,35 @@ export default function BarbershopPage() {
   }, [id]);
 
   useEffect(() => {
-    void getStoredUser().then(setUser);
+    void getStoredUser().then((storedUser) => {
+      setUser(storedUser);
+      if (storedUser?.role === "CLIENT" && id) {
+        void listFavorites()
+          .then((data) => setFavorite(data.barbershops.some((item) => item.id === id)))
+          .catch(() => undefined);
+      }
+    });
     void load();
-  }, [load]);
+  }, [id, load]);
+
+  async function handleFavorite() {
+    if (!user) {
+      Alert.alert("Entre na sua conta", "Faça login para salvar suas barbearias favoritas.");
+      return;
+    }
+    if (updatingFavorite || !barbershop) return;
+    setUpdatingFavorite(true);
+    try {
+      setFavorite(await toggleFavoriteBarbershop(barbershop.id));
+    } catch (favoriteError) {
+      Alert.alert(
+        "Não foi possível atualizar",
+        favoriteError instanceof Error ? favoriteError.message : "Tente novamente.",
+      );
+    } finally {
+      setUpdatingFavorite(false);
+    }
+  }
 
   async function handleShare() {
     if (!barbershop) return;
@@ -364,8 +395,8 @@ export default function BarbershopPage() {
             <View className="gap-1.5">
               <ActionButton
                 icon={favorite ? "heart" : "heart-outline"}
-                label={favorite ? "Favorita" : "Favoritar"}
-                onPress={() => setFavorite((current) => !current)}
+                label={updatingFavorite ? "Salvando..." : favorite ? "Favorita" : "Favoritar"}
+                onPress={() => void handleFavorite()}
               />
               <ActionButton icon="share-outline" label="Compartilhar" onPress={() => void handleShare()} />
               <ActionButton

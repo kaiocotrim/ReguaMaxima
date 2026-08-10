@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
-import { router } from "expo-router";
+import { type Href, router } from "expo-router";
 import type { ComponentProps } from "react";
 import { useEffect, useRef } from "react";
 import {
@@ -24,7 +24,7 @@ type MenuItem = {
   icon: IconName;
   label: string;
   description: string;
-  route?: "/home";
+  route?: "/home" | "/appointments" | "/favorites";
   onlyBarber?: boolean;
   onlyClient?: boolean;
 };
@@ -44,12 +44,14 @@ const ITEMS: MenuItem[] = [
   },
   {
     icon: "calendar-outline",
+    route: "/appointments",
     label: "Agendamentos",
     description: "Agendamentos e histórico",
     onlyClient: true,
   },
   {
     icon: "heart-outline",
+    route: "/favorites",
     label: "Favoritos",
     description: "Seus favoritos",
   },
@@ -166,7 +168,7 @@ export function SideMenu({ visible, user, onClose }: SideMenuProps) {
   function handleItem(item: MenuItem) {
     void selectionFeedback();
     if (item.route) {
-      close(() => router.replace(item.route!));
+      close(() => router.replace(item.route! as Href));
       return;
     }
     Alert.alert(item.label, "Esta área será implementada na próxima etapa.");

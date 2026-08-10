@@ -116,7 +116,10 @@ function AppointmentCard({
   );
 
   return (
-    <View
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Ver agendamento de ${booking.service.name}`}
+      onPress={() => router.push("/appointments" as Href)}
       className="h-[150px] flex-row items-center rounded-[18px] border border-[#E1E4E2] bg-white px-5"
       style={{ width }}
     >
@@ -154,7 +157,7 @@ function AppointmentCard({
           {date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
         </Text>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
