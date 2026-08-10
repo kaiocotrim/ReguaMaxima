@@ -24,7 +24,7 @@ type MenuItem = {
   icon: IconName;
   label: string;
   description: string;
-  route?: "/home" | "/appointments" | "/favorites";
+  route?: "/home" | "/appointments" | "/favorites" | "/notifications" | "/settings";
   onlyBarber?: boolean;
   onlyClient?: boolean;
 };
@@ -57,6 +57,7 @@ const ITEMS: MenuItem[] = [
   },
   {
     icon: "notifications-outline",
+    route: "/notifications",
     label: "Notificações",
     description: "Avisos sobre seus agendamentos",
   },
@@ -80,6 +81,7 @@ const ITEMS: MenuItem[] = [
   },
   {
     icon: "settings-outline",
+    route: "/settings",
     label: "Configurações",
     description: "Ajustes da conta",
   },
