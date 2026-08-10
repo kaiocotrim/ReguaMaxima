@@ -4,6 +4,7 @@ import {
   mobileAuthOptionsResponse,
 } from "@/app/_lib/mobile-auth"
 import { createBookingForUser } from "@/app/_lib/create-booking"
+import { db } from "@/app/_lib/prisma"
 
 export const runtime = "nodejs"
 
@@ -13,6 +14,55 @@ function text(value: unknown) {
 
 export function OPTIONS() {
   return mobileAuthOptionsResponse()
+}
+
+export async function GET(request: Request) {
+  const authenticated = await authenticateMobileAccess(request)
+
+  if (!authenticated.ok) {
+    return mobileAuthJson(
+      { code: "UNAUTHORIZED", error: "Sua sessão expirou. Entre novamente." },
+      401,
+    )
+  }
+
+  try {
+    const bookings = await db.booking.findMany({
+      where: {
+        userId: authenticated.user.id,
+        status: "EM_ANDAMENTO",
+        date: { gte: new Date() },
+      },
+      orderBy: { date: "asc" },
+      take: 10,
+      select: {
+        id: true,
+        date: true,
+        status: true,
+        service: { select: { name: true } },
+        barbershop: {
+          select: {
+            id: true,
+            name: true,
+            imageUrl: true,
+          },
+        },
+      },
+    })
+
+    return mobileAuthJson({
+      data: bookings.map((booking) => ({
+        ...booking,
+        date: booking.date.toISOString(),
+      })),
+    })
+  } catch (error) {
+    console.error("Falha ao carregar agendamentos do aplicativo", error)
+    return mobileAuthJson(
+      { code: "BOOKINGS_UNAVAILABLE", error: "Não foi possível carregar seus agendamentos." },
+      500,
+    )
+  }
 }
 
 export async function POST(request: Request) {

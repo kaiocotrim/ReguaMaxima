@@ -16,6 +16,23 @@ type CreateBookingResponse = {
   error?: string;
 };
 
+export type UpcomingBooking = {
+  id: string;
+  date: string;
+  status: "EM_ANDAMENTO";
+  service: { name: string };
+  barbershop: {
+    id: string;
+    name: string;
+    imageUrl: string;
+  };
+};
+
+type UpcomingBookingsResponse = {
+  data?: UpcomingBooking[];
+  error?: string;
+};
+
 async function parseResponse<T>(response: Response) {
   const text = await response.text();
   const contentType = response.headers.get("content-type")?.toLowerCase() ?? "";
@@ -104,6 +121,23 @@ export async function createBooking(input: {
   const data = await parseResponse<CreateBookingResponse>(response);
   if (!response.ok || !data.data) {
     throw new Error(data.error || "Não foi possível concluir o agendamento.");
+  }
+  return data.data;
+}
+
+export async function listUpcomingBookings() {
+  const accessToken = await getAccessToken();
+  if (!accessToken) return [];
+
+  const response = await fetch(`${API_URL}/api/mobile/bookings`, {
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  const data = await parseResponse<UpcomingBookingsResponse>(response);
+  if (!response.ok || !data.data) {
+    throw new Error(data.error || "Não foi possível carregar seus agendamentos.");
   }
   return data.data;
 }

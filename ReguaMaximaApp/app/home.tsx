@@ -15,6 +15,7 @@ import {
   ScrollView,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -28,6 +29,10 @@ import {
   type Barbershop,
   listBarbershops,
 } from "../services/barbershops";
+import {
+  listUpcomingBookings,
+  type UpcomingBooking,
+} from "../services/bookings";
 
 const BRAND = "#254F50";
 const LIME = "#B8F51C";
@@ -95,6 +100,61 @@ function FluidPressable({
         {children}
       </Pressable>
     </Animated.View>
+  );
+}
+
+function AppointmentCard({
+  booking,
+  width,
+}: {
+  booking: UpcomingBooking;
+  width: number;
+}) {
+  const date = new Date(booking.date);
+  const month = capitalizeFirst(
+    date.toLocaleDateString("pt-BR", { month: "long" }),
+  );
+
+  return (
+    <View
+      className="h-[150px] flex-row items-center rounded-[18px] border border-[#E1E4E2] bg-white px-5"
+      style={{ width }}
+    >
+      <View className="h-14 w-14 overflow-hidden rounded-full bg-[#E8ECE9]">
+        <Image
+          source={{ uri: booking.barbershop.imageUrl }}
+          contentFit="cover"
+          style={{ width: "100%", height: "100%" }}
+        />
+      </View>
+      <View className="ml-4 min-w-0 flex-1">
+        <View className="self-start rounded-full bg-[#B8F51C] px-2.5 py-1">
+          <Text className="text-[11px] text-[#254F50]" style={{ fontFamily: "Satoshi-Bold" }}>
+            Confirmado
+          </Text>
+        </View>
+        <Text numberOfLines={1} className="mt-2 text-[14px] text-[#254F50]" style={{ fontFamily: "Satoshi-Bold" }}>
+          {booking.service.name}
+        </Text>
+        <View className="mt-2 flex-row items-center">
+          <Ionicons name="location-outline" size={15} color={BRAND} />
+          <Text numberOfLines={1} className="ml-1 flex-1 text-[13px] text-[#254F50]" style={{ fontFamily: "Satoshi-Bold" }}>
+            {booking.barbershop.name}
+          </Text>
+        </View>
+      </View>
+      <View className="ml-3 h-[116px] w-[70px] items-center justify-center border-l border-[#DDE1DF] pl-4">
+        <Text numberOfLines={1} className="text-[13px] text-[#254F50]" style={{ fontFamily: "Satoshi-Bold" }}>
+          {month}
+        </Text>
+        <Text className="text-[25px] leading-[30px] text-[#254F50]" style={{ fontFamily: "Satoshi-Bold" }}>
+          {date.getDate()}
+        </Text>
+        <Text className="text-[14px] text-[#254F50]" style={{ fontFamily: "Satoshi-Bold" }}>
+          {date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+        </Text>
+      </View>
+    </View>
   );
 }
 
@@ -205,7 +265,9 @@ function BarberCard({
 
 export default function Home() {
   const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
   const [barbershops, setBarbershops] = useState<Barbershop[]>([]);
+  const [appointments, setAppointments] = useState<UpcomingBooking[]>([]);
   const [search, setSearch] = useState("");
   const [selectedService, setSelectedService] = useState("");
   const [loading, setLoading] = useState(true);
@@ -251,6 +313,14 @@ export default function Home() {
     }
   }, [search, selectedService]);
 
+  const loadAppointments = useCallback(async () => {
+    try {
+      setAppointments(await listUpcomingBookings());
+    } catch {
+      setAppointments([]);
+    }
+  }, []);
+
   useEffect(() => {
     async function loadInitialBarbershops() {
       try {
@@ -267,7 +337,8 @@ export default function Home() {
     }
 
     void loadInitialBarbershops();
-  }, []);
+    void loadAppointments();
+  }, [loadAppointments]);
 
   function openMenu() {
     void selectionFeedback();
@@ -312,7 +383,7 @@ export default function Home() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        refreshControl={<RefreshControl refreshing={refreshing} tintColor={BRAND} onRefresh={() => { setRefreshing(true); void loadBarbershops(); }} />}
+        refreshControl={<RefreshControl refreshing={refreshing} tintColor={BRAND} onRefresh={() => { setRefreshing(true); void Promise.allSettled([loadBarbershops(), loadAppointments()]); }} />}
         contentContainerStyle={{ paddingBottom: insets.bottom + 28 }}
       >
         <View className="px-5 pb-[18px] pt-5">
@@ -390,6 +461,36 @@ export default function Home() {
             style={{ width: "100%", height: "100%" }}
           />
         </View>
+
+        {appointments.length > 0 && (
+          <View className="mt-6">
+            <Text
+              className="px-[18px] text-[12px] uppercase text-[#163E3F]"
+              style={{ fontFamily: "Satoshi-Bold", letterSpacing: 0.35 }}
+            >
+              Agendados ({appointments.length})
+            </Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              snapToInterval={Math.min(390, screenWidth - 32) + 10}
+              decelerationRate="fast"
+              contentContainerStyle={{
+                gap: 10,
+                paddingHorizontal: 16,
+                paddingTop: 16,
+              }}
+            >
+              {appointments.map((booking) => (
+                <AppointmentCard
+                  key={booking.id}
+                  booking={booking}
+                  width={Math.min(390, screenWidth - 32)}
+                />
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
         <View className="mb-5 mt-6 flex-row items-center justify-between px-[18px]">
           <Text
