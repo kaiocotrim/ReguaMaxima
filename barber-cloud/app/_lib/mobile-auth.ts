@@ -38,8 +38,13 @@ export type MobileAuthUser = {
   role: "CLIENT" | "BARBER"
 }
 
-type MobileUserWithPassword = PasswordAuthenticatedUser & {
+type MobileSessionUser = Omit<PasswordAuthenticatedUser, "password"> & {
+  password: string | null
   role: "CLIENT" | "BARBER"
+}
+
+type MobileSessionCandidate = Omit<PasswordAuthenticatedUser, "password"> & {
+  password: string | null
 }
 
 export type MobileAuthTokenData = {
@@ -95,7 +100,7 @@ function hashRefreshToken(refreshToken: string) {
     .digest("hex")}`
 }
 
-function toMobileUser(user: MobileUserWithPassword): MobileAuthUser {
+function toMobileUser(user: MobileSessionUser): MobileAuthUser {
   return {
     id: user.id,
     name: user.name?.trim() || user.email || "Usuário",
@@ -159,7 +164,7 @@ function parseRefreshToken(value: unknown): RefreshTokenPayload | null {
 }
 
 async function createAccessToken(
-  user: MobileUserWithPassword,
+  user: MobileSessionUser,
   sessionId: string,
   passwordVersion: string,
 ) {
@@ -187,8 +192,8 @@ async function createAccessToken(
 }
 
 function isMobileRole(
-  user: PasswordAuthenticatedUser,
-): user is MobileUserWithPassword {
+  user: MobileSessionCandidate,
+): user is MobileSessionUser {
   return user.role === "CLIENT" || user.role === "BARBER"
 }
 
@@ -228,7 +233,7 @@ export function mobileAuthEmptyResponse() {
 }
 
 export async function issueMobileSession(
-  user: PasswordAuthenticatedUser,
+  user: MobileSessionCandidate,
 ): Promise<MobileAuthResult> {
   if (!isMobileRole(user)) {
     return { ok: false, reason: "PROFILE_REQUIRED" }
@@ -341,21 +346,14 @@ export async function rotateMobileRefreshToken(
 
   const user = storedSession.user
 
-  if (!user.password) {
-    await db.session.deleteMany({
-      where: { id: storedSession.id, sessionToken: expectedTokenHash },
-    })
-    return { ok: false, reason: "INVALID_SESSION" }
-  }
-
-  if (!isMobileRole(user as PasswordAuthenticatedUser)) {
+  if (!isMobileRole(user)) {
     await db.session.deleteMany({
       where: { id: storedSession.id, sessionToken: expectedTokenHash },
     })
     return { ok: false, reason: "PROFILE_REQUIRED" }
   }
 
-  const mobileUser = user as MobileUserWithPassword
+  const mobileUser = user
   const currentPasswordVersion = createPasswordVersion(mobileUser.password)
 
   if (!valuesMatch(parsedToken.passwordVersion, currentPasswordVersion)) {
@@ -498,17 +496,12 @@ export async function authenticateMobileAccess(
 
   const user = storedSession.user
 
-  if (!user.password) {
-    await db.session.deleteMany({ where: { id: storedSession.id } })
-    return { ok: false, reason: "INVALID_SESSION" }
-  }
-
-  if (!isMobileRole(user as PasswordAuthenticatedUser)) {
+  if (!isMobileRole(user)) {
     await db.session.deleteMany({ where: { id: storedSession.id } })
     return { ok: false, reason: "PROFILE_REQUIRED" }
   }
 
-  const mobileUser = user as MobileUserWithPassword
+  const mobileUser = user
   const currentPasswordVersion = createPasswordVersion(mobileUser.password)
 
   if (
