@@ -15,7 +15,6 @@ import { useSession } from "next-auth/react"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { useRouter } from "next/navigation"
-import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
 import {
   PendingBookingReviews,
@@ -24,10 +23,29 @@ import {
 
 import {
   Carousel,
+  type CarouselApi,
   CarouselContent,
   CarouselItem,
 } from "@/app/_components/ui/carousel"
 import { BackgroundEffects } from "./BackgroundEffects"
+
+const homeBanners = [
+  {
+    light: "/banner1.png",
+    dark: "/banner2Dark.png.png",
+    alt: "Agende com facilidade na Régua Máxima",
+  },
+  {
+    light: "/banner2.png",
+    dark: "/banner3Dark.png.png",
+    alt: "Organize os horários da sua barbearia",
+  },
+  {
+    light: "/banner3.png",
+    dark: "/banner1Dark.png",
+    alt: "Encontre uma barbearia ideal",
+  },
+]
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -88,24 +106,33 @@ export default function HomeClient({
   const role = session?.user?.role
   const router = useRouter()
 
-  const { resolvedTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
+  const [bannerApi, setBannerApi] = useState<CarouselApi>()
+  const [activeBanner, setActiveBanner] = useState(0)
 
   useEffect(() => {
-    // O tema só pode ser determinado com segurança após a hidratação.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMounted(true)
-  }, [])
+    if (!bannerApi) return
+
+    const updateActiveBanner = () => {
+      setActiveBanner(bannerApi.selectedScrollSnap())
+    }
+
+    updateActiveBanner()
+    bannerApi.on("select", updateActiveBanner)
+
+    const autoplay = window.setInterval(() => {
+      bannerApi.scrollNext()
+    }, 5000)
+
+    return () => {
+      window.clearInterval(autoplay)
+      bannerApi.off("select", updateActiveBanner)
+    }
+  }, [bannerApi])
 
   const bookingsToShow =
     confirmedBookings.length > 1
       ? [...confirmedBookings.slice(1), confirmedBookings[0]]
       : confirmedBookings
-
-  const banner =
-    resolvedTheme === "dark"
-      ? "/bannerReguaM-dark1.png"
-      : "/bannerReguaM-light1.png"
 
   const nextBooking = confirmedBookings[0]
 
@@ -385,9 +412,9 @@ export default function HomeClient({
           </section>
         </motion.div>
 
-        {/* Banner Dinâmico */}
+        {/* Carrossel de banners */}
         <motion.div
-          className="border-border/50 relative h-[150px] w-full overflow-hidden rounded-2xl border shadow-sm sm:h-[230px] lg:aspect-[1983/793] lg:h-auto lg:rounded-3xl"
+          className="border-border/50 relative w-full overflow-hidden rounded-2xl border shadow-sm lg:rounded-3xl"
           variants={fadeUp}
           initial="hidden"
           animate="show"
@@ -399,29 +426,53 @@ export default function HomeClient({
             damping: 25,
           }}
         >
-          {mounted && (
-            <Image
-              src={banner}
-              alt="Banner Maximum"
-              fill
-              priority
-              className="object-cover transition-all duration-500 lg:hidden"
-            />
-          )}
-          {mounted && (
-            <Image
-              src={
-                resolvedTheme === "dark"
-                  ? "/tamNovoescuro.png"
-                  : "/tamNovoclaro.png"
-              }
-              alt="Banner Maximum"
-              fill
-              priority
-              sizes="(min-width: 1024px) 1216px, 100vw"
-              className="hidden object-cover transition-all duration-500 lg:block"
-            />
-          )}
+          <Carousel
+            setApi={setBannerApi}
+            opts={{ loop: true }}
+            aria-label="Destaques da Régua Máxima"
+          >
+            <CarouselContent className="ml-0">
+              {homeBanners.map((banner, index) => (
+                <CarouselItem key={banner.light} className="pl-0">
+                  <div className="relative aspect-[1983/793] w-full">
+                    <Image
+                      src={banner.light}
+                      alt={banner.alt}
+                      fill
+                      priority={index === 0}
+                      sizes="(min-width: 1024px) 1216px, 100vw"
+                      className="object-cover dark:hidden"
+                    />
+                    <Image
+                      src={banner.dark}
+                      alt={banner.alt}
+                      fill
+                      priority={index === 0}
+                      sizes="(min-width: 1024px) 1216px, 100vw"
+                      className="hidden object-cover dark:block"
+                    />
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+
+            <div className="absolute right-0 bottom-3 left-0 z-10 flex justify-center gap-2 sm:bottom-4">
+              {homeBanners.map((banner, index) => (
+                <button
+                  key={banner.light}
+                  type="button"
+                  aria-label={`Ir para o banner ${index + 1}`}
+                  aria-current={activeBanner === index ? "true" : undefined}
+                  onClick={() => bannerApi?.scrollTo(index)}
+                  className={`h-2 cursor-pointer rounded-full shadow-sm transition-all ${
+                    activeBanner === index
+                      ? "w-6 bg-[#254F50] dark:bg-[#C3F32C]"
+                      : "w-2 bg-white/80 hover:bg-white dark:bg-white/60"
+                  }`}
+                />
+              ))}
+            </div>
+          </Carousel>
         </motion.div>
 
         <div className="space-y-6 lg:space-y-8">
