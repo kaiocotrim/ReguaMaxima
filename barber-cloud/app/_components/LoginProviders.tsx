@@ -26,7 +26,7 @@ const handleLogin = async (
         <Button
           key={provider.id}
           onClick={() => handleLogin(provider.id, provider.callbackUrl)}
-          className="w-full justify-start gap-3 rounded-xl bg-[#C3F32C] text-black hover:bg-[#d6f083] cursor-pointer"
+          className="w-full justify-start gap-3 rounded-full bg-[#C3F32C] text-black hover:bg-[#d6f083] cursor-pointer"
         >
           <Image
             src={provider.src}

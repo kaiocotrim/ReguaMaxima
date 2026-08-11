@@ -15,7 +15,7 @@ import { Eye, EyeOff } from "lucide-react"
 type Mode = "login" | "register" | "success"
 
 const inputClassName =
-  "h-12 rounded-md border border-input bg-card px-4 text-sm text-foreground transition-all placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0"
+  "h-12 rounded-full border border-input bg-card px-5 text-sm text-foreground transition-all placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0"
 
 export function LoginForm({
   className,

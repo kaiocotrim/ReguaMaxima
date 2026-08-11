@@ -4,12 +4,10 @@ import { DashRing } from "@/app/_components/dash-ring"
 import Image from "next/image"
 import { Button } from "@/app/_components/ui/button"
 import Header from "./header"
-import { Card, CardContent } from "./ui/card"
-import { Badge } from "./ui/badge"
 import { Avatar, AvatarImage } from "./ui/avatar"
 import BarbershopItem from "./barbershop-item"
 import SearchBar from "./SearchBar"
-import { CalendarDays, ChevronRight, Heart, MapPin, Star } from "lucide-react"
+import { CalendarDays, ChevronRight, Heart, Star } from "lucide-react"
 import { motion } from "framer-motion"
 import { useSession } from "next-auth/react"
 import { format } from "date-fns"
@@ -129,11 +127,6 @@ export default function HomeClient({
     }
   }, [bannerApi])
 
-  const bookingsToShow =
-    confirmedBookings.length > 1
-      ? [...confirmedBookings.slice(1), confirmedBookings[0]]
-      : confirmedBookings
-
   const nextBooking = confirmedBookings[0]
 
   if (loading) {
@@ -149,7 +142,7 @@ export default function HomeClient({
       <BackgroundEffects />
       <Header />
 
-      <main className="relative z-10 mx-auto w-full max-w-7xl space-y-6 px-4 py-5 sm:px-6 sm:py-6 lg:max-w-6xl lg:px-6 lg:pt-14 lg:pb-8">
+      <main className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 sm:py-6 lg:max-w-6xl lg:px-6 lg:pt-14 lg:pb-8">
         {/* Saudação */}
         <motion.div
           className="space-y-1 lg:space-y-2"
@@ -237,7 +230,7 @@ export default function HomeClient({
                       `/barbershops?service=${encodeURIComponent(service ?? "")}`,
                   )
                 }
-                className="bg-card dark:bg-secondary cursor-pointer gap-1 p-4 whitespace-nowrap hover:bg-[#C3F32C]"
+                className="bg-card dark:bg-secondary cursor-pointer gap-1 rounded-full px-4 py-2 whitespace-nowrap hover:bg-[#C3F32C]"
                 variant="secondary"
               >
                 <span
@@ -262,14 +255,14 @@ export default function HomeClient({
         </motion.div>
 
         <motion.div
-          className="hidden gap-3 lg:grid lg:grid-cols-[1.08fr_0.92fr]"
+          className="order-5 grid gap-3 lg:order-none lg:grid-cols-[1.08fr_0.92fr]"
           variants={fadeUp}
           initial="hidden"
           animate="show"
           custom={3}
         >
-          <section className="border-border/70 bg-card/90 min-h-[212px] rounded-2xl border p-7 shadow-sm backdrop-blur-sm">
-            <h2 className="mb-5 text-xl font-semibold tracking-tight">
+          <section className="border-border/70 bg-card/90 rounded-2xl border p-4 shadow-sm backdrop-blur-sm sm:p-5 lg:min-h-[212px] lg:p-7">
+            <h2 className="mb-4 text-base font-semibold tracking-tight sm:text-lg lg:mb-5 lg:text-xl">
               Último agendamento
             </h2>
 
@@ -279,9 +272,9 @@ export default function HomeClient({
                 onClick={() =>
                   router.push(`/barbershops/${nextBooking.barbershop.id}`)
                 }
-                className="group bg-background/70 flex w-full cursor-pointer items-center gap-4 rounded-2xl border border-[#a9cf44]/70 p-4 text-left transition-[border-color,background-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-[#8db719] hover:bg-[#f8fdea] hover:shadow-md focus-visible:ring-2 focus-visible:ring-[#9bc826] focus-visible:ring-offset-2 focus-visible:outline-none dark:hover:bg-[#1d2918]"
+                className="group bg-background/70 flex w-full cursor-pointer items-center gap-3 rounded-xl border border-[#a9cf44]/70 p-3 text-left transition-[border-color,background-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-[#8db719] hover:bg-[#f8fdea] hover:shadow-md focus-visible:ring-2 focus-visible:ring-[#9bc826] focus-visible:ring-offset-2 focus-visible:outline-none sm:gap-4 sm:rounded-2xl sm:p-4 dark:hover:bg-[#1d2918]"
               >
-                <Avatar className="bg-muted size-20 shrink-0 border-2 border-[#9bc826]">
+                <Avatar className="bg-muted size-16 shrink-0 border-2 border-[#9bc826] sm:size-20">
                   <AvatarImage
                     src={nextBooking.barbershop.imageUrl}
                     alt={nextBooking.barbershop.name}
@@ -290,7 +283,7 @@ export default function HomeClient({
                 </Avatar>
 
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-lg font-semibold">
+                  <p className="truncate text-base font-semibold sm:text-lg">
                     {nextBooking.barbershop.name}
                   </p>
                   <p className="text-muted-foreground mt-1 truncate text-sm">
@@ -307,8 +300,8 @@ export default function HomeClient({
                   </p>
                 </div>
 
-                <span className="flex size-14 shrink-0 items-center justify-center rounded-full bg-[#254F50] text-[#C3F32C] transition-transform duration-200 group-hover:translate-x-1">
-                  <ChevronRight className="size-7" strokeWidth={2.25} />
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#254F50] text-[#C3F32C] transition-transform duration-200 group-hover:translate-x-1 sm:size-14">
+                  <ChevronRight className="size-5 sm:size-7" strokeWidth={2.25} />
                 </span>
               </button>
             ) : (
@@ -332,9 +325,9 @@ export default function HomeClient({
             )}
           </section>
 
-          <section className="border-border/70 bg-card/90 min-h-[212px] rounded-2xl border p-7 shadow-sm backdrop-blur-sm">
+          <section className="border-border/70 bg-card/90 rounded-2xl border p-4 shadow-sm backdrop-blur-sm sm:p-5 lg:min-h-[212px] lg:p-7">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold tracking-tight">
+              <h2 className="text-base font-semibold tracking-tight sm:text-lg lg:text-xl">
                 Favoritos
               </h2>
               <button
@@ -414,7 +407,7 @@ export default function HomeClient({
 
         {/* Carrossel de banners */}
         <motion.div
-          className="border-border/50 relative w-full overflow-hidden rounded-2xl border shadow-sm lg:rounded-3xl"
+          className="border-border/50 relative order-4 w-full overflow-hidden rounded-xl border shadow-sm sm:rounded-2xl lg:order-none lg:rounded-3xl"
           variants={fadeUp}
           initial="hidden"
           animate="show"
@@ -434,14 +427,14 @@ export default function HomeClient({
             <CarouselContent className="ml-0">
               {homeBanners.map((banner, index) => (
                 <CarouselItem key={banner.light} className="pl-0">
-                  <div className="relative aspect-[1983/793] w-full">
+                  <div className="relative h-[148px] w-full min-[420px]:aspect-[1983/793] min-[420px]:h-auto">
                     <Image
                       src={banner.light}
                       alt={banner.alt}
                       fill
                       priority={index === 0}
                       sizes="(min-width: 1024px) 1216px, 100vw"
-                      className="object-cover dark:hidden"
+                      className="object-cover object-center dark:hidden"
                     />
                     <Image
                       src={banner.dark}
@@ -449,14 +442,14 @@ export default function HomeClient({
                       fill
                       priority={index === 0}
                       sizes="(min-width: 1024px) 1216px, 100vw"
-                      className="hidden object-cover dark:block"
+                      className="hidden object-cover object-center dark:block"
                     />
                   </div>
                 </CarouselItem>
               ))}
             </CarouselContent>
 
-            <div className="absolute right-0 bottom-3 left-0 z-10 flex justify-center gap-2 sm:bottom-4">
+            <div className="absolute right-0 bottom-2 left-0 z-10 flex justify-center gap-1.5 sm:bottom-4 sm:gap-2">
               {homeBanners.map((banner, index) => (
                 <button
                   key={banner.light}
@@ -464,10 +457,10 @@ export default function HomeClient({
                   aria-label={`Ir para o banner ${index + 1}`}
                   aria-current={activeBanner === index ? "true" : undefined}
                   onClick={() => bannerApi?.scrollTo(index)}
-                  className={`h-2 cursor-pointer rounded-full shadow-sm transition-all ${
+                  className={`h-1.5 cursor-pointer rounded-full shadow-sm transition-all sm:h-2 ${
                     activeBanner === index
-                      ? "w-6 bg-[#254F50] dark:bg-[#C3F32C]"
-                      : "w-2 bg-white/80 hover:bg-white dark:bg-white/60"
+                      ? "w-5 bg-[#254F50] sm:w-6 dark:bg-[#C3F32C]"
+                      : "w-1.5 bg-white/80 hover:bg-white sm:w-2 dark:bg-white/60"
                   }`}
                 />
               ))}
@@ -475,87 +468,8 @@ export default function HomeClient({
           </Carousel>
         </motion.div>
 
-        <div className="space-y-6 lg:space-y-8">
+        <div className="order-6 space-y-6 lg:order-none lg:space-y-8">
           <PendingBookingReviews initialReviews={pendingReviews} />
-
-          {/* ✅ Agendamentos — só aparece se tiver algum */}
-          {confirmedBookings.length > 0 && (
-            <div className="space-y-6 lg:hidden">
-              <motion.h2
-                className="text-xs font-bold uppercase"
-                variants={fadeIn}
-                initial="hidden"
-                animate="show"
-                custom={4}
-              >
-                {confirmedBookings.length > 1
-                  ? `Agendados (${confirmedBookings.length})`
-                  : "Agendado"}
-              </motion.h2>
-
-              <motion.div
-                variants={fadeUp}
-                initial="hidden"
-                animate="show"
-                custom={5}
-              >
-                <Carousel>
-                  <CarouselContent className="-ml-2">
-                    {bookingsToShow.map((booking) => (
-                      <CarouselItem
-                        key={booking.id}
-                        className="basis-[90%] pl-2 sm:basis-[60%] lg:basis-1/2 xl:basis-1/3"
-                      >
-                        <Card
-                          className="cursor-pointer hover:bg-[#E6F4D4] hover:bg-black dark:hover:bg-[#262626]"
-                          onClick={() => router.push(`/appointments`)}
-                        >
-                          <CardContent className="flex justify-between p-0">
-                            <div className="flex items-center gap-3 py-5 pl-5">
-                              <Avatar className="h-14 w-14 border-2 border-solid border-white">
-                                <AvatarImage
-                                  src={booking.barbershop.imageUrl}
-                                  alt={booking.barbershop.name}
-                                />
-                              </Avatar>
-                              <div className="flex flex-col gap-2">
-                                <Badge
-                                  variant="outline"
-                                  className="w-fit bg-[#C3F32C] font-bold text-[#254F50]"
-                                >
-                                  Confirmado
-                                </Badge>
-                                <h3 className="font-semibold">
-                                  {booking.service.name}
-                                </h3>
-                                <span className="inline-flex items-center gap-1 text-sm">
-                                  <MapPin size={14} />
-                                  <span>{booking.barbershop.name}</span>
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex flex-col items-center justify-center border-l-2 border-solid px-5">
-                              <p className="text-sm capitalize">
-                                {format(new Date(booking.date), "MMMM", {
-                                  locale: ptBR,
-                                })}
-                              </p>
-                              <p className="text-2xl font-bold">
-                                {format(new Date(booking.date), "dd")}
-                              </p>
-                              <p className="text-sm font-bold">
-                                {format(new Date(booking.date), "HH:mm")}
-                              </p>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                </Carousel>
-              </motion.div>
-            </div>
-          )}
 
           {/* Recomendações */}
           <div className="flex items-center justify-between">
