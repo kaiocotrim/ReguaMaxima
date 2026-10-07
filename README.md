@@ -1,6 +1,3 @@
-<div align="center">
-  <img src="./barber-cloud/public/LogoMComBorder3.png" alt="Logo da Régua Máxima" width="180" />
-
 # Régua Máxima
 
 Plataforma completa para gestão de barbearias, conectando clientes, barbeiros e proprietários em um único sistema.
