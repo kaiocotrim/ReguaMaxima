@@ -1,237 +1,335 @@
 <div align="center">
   <img src="./barber-cloud/public/LogoMComBorder3.png" alt="Logo da Régua Máxima" width="180" />
 
-  # Régua Máxima
+# Régua Máxima
 
-  **Plataforma completa para conectar clientes, barbeiros e barbearias.**
+Plataforma completa para gestão de barbearias, conectando clientes, barbeiros e proprietários em um único sistema.
 
-  Agendamentos online, gestão de equipe, serviços, caixa, avaliações,
-  relatórios e presença digital em um único sistema.
+O Régua Máxima permite descobrir barbearias, realizar agendamentos online, gerenciar serviços, equipe, caixa, avaliações, relatórios e a presença digital do estabelecimento.
 
-  [Apresentação](#-sobre-o-projeto) ·
-  [Funcionalidades](#-funcionalidades) ·
-  [Instalação](#-executando-localmente) ·
-  [Documentação](#-arquitetura) ·
-  [Licença](#-licença)
-</div>
+## Arquitetura
 
----
+```mermaid
+flowchart LR
+    subgraph Cliente
+        USER[Cliente / Barbeiro / Proprietário]
+    end
 
-## ✂️ Sobre o projeto
+    subgraph ReguaMaxima
+        APP[Next.js 16 - App Router]
+        AUTH[NextAuth]
+        PRISMA[Prisma 7]
+    end
 
-A **Régua Máxima** é uma plataforma de gestão e descoberta criada para o
-mercado de barbearias. O sistema oferece uma experiência pública para clientes
-encontrarem estabelecimentos e reservarem horários, além de um painel
-administrativo para o proprietário controlar a operação do negócio.
+    subgraph Dados
+        DB[(PostgreSQL - Neon)]
+        STORAGE[Supabase Storage]
+    end
 
-O projeto organiza toda a jornada:
+    subgraph Serviços
+        RESEND[Resend]
+        OAUTH[Google / GitHub / Facebook]
+    end
 
-1. O cliente encontra uma barbearia.
-2. Escolhe serviço, profissional, data e horário.
-3. A reserva entra automaticamente na agenda do estabelecimento.
-4. O profissional realiza e conclui o atendimento.
-5. O pagamento alimenta o caixa e os relatórios.
-6. O cliente pode avaliar o barbeiro e a barbearia.
+    USER <--> APP
+    APP <--> AUTH
+    APP <--> PRISMA
+    PRISMA <--> DB
+    APP <--> STORAGE
+    APP --> RESEND
+    AUTH <--> OAUTH
+```
 
-## 🎯 Objetivos
+## Estrutura do repositório
 
-- Facilitar o agendamento de serviços de barbearia.
-- Reduzir o controle manual de agenda e atendimentos.
-- Centralizar equipe, catálogo de serviços e movimentações financeiras.
-- Ajudar barbearias a construírem presença e reputação digital.
-- Oferecer dados para decisões por meio de indicadores e relatórios.
+```text
+ReguaMaxima/
+├── barber-cloud/              # Aplicação principal Next.js
+│   ├── app/
+│   │   ├── _actions/         # Server Actions e regras de negócio
+│   │   ├── _components/      # Componentes da aplicação
+│   │   ├── _emails/          # Templates de e-mail
+│   │   ├── _hooks/           # Hooks reutilizáveis
+│   │   ├── _lib/             # Banco, autenticação e serviços
+│   │   ├── _providers/       # Providers globais
+│   │   ├── admin/            # Administração de licenças
+│   │   ├── api/              # Route Handlers
+│   │   ├── dashboard/        # Painel da barbearia
+│   │   └── barbershops/      # Descoberta e perfil das barbearias
+│   │
+│   ├── prisma/
+│   │   ├── migrations/       # Migrações do banco
+│   │   ├── schema.prisma     # Schema principal
+│   │   └── seed.ts           # Dados iniciais
+│   │
+│   ├── public/               # Arquivos públicos
+│   ├── prisma.config.ts
+│   └── next.config.ts
+│
+├── ReguaMaximaApp/
+├── README.md
+└── LICENSE
+```
 
-## 👥 Perfis atendidos
+## Principais tecnologias
 
-### Cliente
-
-- Cadastro e autenticação.
-- Busca e descoberta de barbearias.
-- Visualização de perfil, serviços, equipe, fotos e avaliações.
-- Agendamento online.
-- Consulta e gerenciamento dos próprios horários.
-- Favoritos.
-- Avaliação pós-atendimento.
-- Configuração de perfil e tema.
-
-### Barbeiro
-
-- Perfil profissional.
-- Portfólio de trabalhos.
-- Participação em uma equipe por convite.
-- Agenda de atendimentos.
-- Avaliações recebidas.
-
-### Proprietário da barbearia
-
-- Dashboard com visão geral do negócio.
-- Gestão de agenda e atendimentos.
-- Cadastro e edição de serviços.
-- Convites e gestão de barbeiros.
-- Controle de caixa.
-- Relatórios.
-- Gestão do perfil público e galeria.
-- Pausa e liberação de novos agendamentos.
-- Consulta do plano e da licença ativa.
-
-### Administrador de licenças
-
-- Geração de chaves.
-- Definição de plano e duração.
-- Acompanhamento de status.
-- Revogação de licenças.
-- Associação da licença ao cliente e à barbearia.
-
-## 🚀 Funcionalidades
-
-### Agendamentos
-
-- Seleção de serviço, barbeiro, data e horário.
-- Visualização em agenda e calendário.
-- Pesquisa avançada.
-- Status `EM_ANDAMENTO`, `CONCLUIDO` e `CANCELADO`.
-- Registro de comparecimento ou falta.
-- Observações no atendimento.
-- Cancelamento sem perda do histórico.
-- Notificações e lembretes por e-mail.
-- Contato com o cliente pelo WhatsApp.
-
-### Serviços
-
-- Criação, edição e exclusão.
-- Nome, descrição, preço, duração e imagem.
-- Associação automática com a barbearia.
-- Uso da duração no cálculo dos horários disponíveis.
-
-### Equipe
-
-- Busca de barbeiros cadastrados.
-- Envio, aceite, recusa e cancelamento de convites.
-- Controle do vínculo com a barbearia.
-- Perfil e portfólio individual do profissional.
-
-### Caixa
-
-- Registro de entradas e saídas.
-- Formas de pagamento: dinheiro, PIX, crédito, débito e outras.
-- Pagamento vinculado ao atendimento concluído.
-- Histórico por data.
-- Identificação do responsável pelo registro.
-
-### Avaliações
-
-- Avaliação do barbeiro após atendimento.
-- Avaliação da barbearia.
-- Nota e comentário.
-- Resumo e distribuição das notas no dashboard.
-- Exibição da reputação no perfil público.
-
-### Perfil da barbearia
-
-- Nome, endereço, cidade e descrição.
-- Telefones e Instagram.
-- Horários de abertura e fechamento.
-- Logo, capa e carrossel de fotos.
-- Cor da marca.
-- Localização por latitude e longitude.
-- Controle da disponibilidade para novos agendamentos.
-
-### Relatórios
-
-- Indicadores de clientes, equipe e agendamentos.
-- Análises operacionais.
-- Exportação de dados de agendamentos para planilha.
-
-### Planos e licenças
-
-- Planos `BASIC`, `PRO` e `PREMIUM`.
-- Chaves protegidas por hash.
-- Ativação por usuário e barbearia.
-- Controle de duração e vencimento.
-- Estados `AVAILABLE`, `CLAIMED`, `ACTIVE` e `REVOKED`.
-- Área administrativa protegida.
-
-### Experiência
-
-- Tema claro e escuro.
-- Interface responsiva.
-- Componentes acessíveis.
-- Feedback visual e notificações.
-- Animações com suporte a `prefers-reduced-motion`.
-- Central de Ajuda em `/ajuda`.
-
-## 🧰 Tecnologias
-
-| Área | Tecnologias |
+| Parte | Tecnologias |
 | --- | --- |
-| Aplicação | Next.js 16, React 19 e TypeScript |
-| Interface | Tailwind CSS 4, Radix UI, Base UI e Lucide |
-| Autenticação | NextAuth, credenciais, Google, GitHub e Facebook |
+| Aplicação | Next.js 16, React 19, TypeScript |
+| Interface | Tailwind CSS 4, Radix UI, Base UI, Lucide |
+| Autenticação | NextAuth, Credentials, Google, GitHub e Facebook |
 | Banco de dados | PostgreSQL hospedado no Neon |
 | ORM | Prisma 7 com adapter Neon |
-| Arquivos | Supabase Storage |
+| Armazenamento | Supabase Storage |
 | E-mail | Resend e React Email |
 | Agenda | FullCalendar |
 | Gráficos | Recharts |
 | Planilhas | ExcelJS |
 | Animações | Framer Motion, Motion e CSS |
-| Segurança | bcrypt, autorização no servidor e rate limiting |
+| Segurança | bcrypt, autorização server-side e rate limiting |
 
-## 🏗️ Arquitetura
+## Funcionalidades
 
-O projeto utiliza o **App Router** do Next.js e prioriza operações protegidas no
-servidor.
+### Descoberta de barbearias
+
+- Listagem de barbearias cadastradas.
+- Perfil público de cada estabelecimento.
+- Informações sobre serviços, equipe, localização e avaliações.
+- Favoritos.
+- Galeria de imagens.
+- Reputação baseada em avaliações de clientes.
+
+### Agendamentos
+
+- Seleção de serviço.
+- Seleção de barbeiro.
+- Escolha de data e horário.
+- Cálculo dos horários disponíveis com base na duração do serviço.
+- Visualização por agenda e calendário.
+- Pesquisa e filtros.
+- Status de atendimento:
+  - `EM_ANDAMENTO`
+  - `CONCLUIDO`
+  - `CANCELADO`
+- Registro de comparecimento ou ausência.
+- Observações do atendimento.
+- Cancelamento mantendo o histórico.
+- Notificações e lembretes por e-mail.
+- Contato com o cliente pelo WhatsApp.
+
+### Serviços
+
+- Cadastro de serviços.
+- Edição e exclusão.
+- Nome e descrição.
+- Preço.
+- Duração.
+- Imagem.
+- Associação automática com a barbearia.
+
+### Equipe
+
+- Cadastro de perfil profissional.
+- Busca por barbeiros.
+- Convites para participar de uma barbearia.
+- Aceite ou recusa de convite.
+- Cancelamento de convites.
+- Controle do vínculo entre barbeiro e estabelecimento.
+- Portfólio individual.
+- Agenda de atendimentos.
+- Avaliações do profissional.
+
+### Caixa
+
+- Registro de entradas e saídas.
+- Histórico financeiro.
+- Associação de pagamentos aos atendimentos.
+- Identificação do responsável pelo registro.
+
+Formas de pagamento suportadas:
+
+- Dinheiro.
+- PIX.
+- Crédito.
+- Débito.
+- Outras formas cadastradas.
+
+### Avaliações
+
+- Avaliação do barbeiro.
+- Avaliação da barbearia.
+- Nota.
+- Comentário.
+- Média das avaliações.
+- Distribuição das notas.
+- Exibição da reputação no perfil público.
+
+### Perfil da barbearia
+
+O proprietário pode configurar:
+
+- Nome.
+- Descrição.
+- Endereço.
+- Cidade.
+- Telefone.
+- Instagram.
+- Horários de funcionamento.
+- Logo.
+- Imagem de capa.
+- Galeria de fotos.
+- Cor da marca.
+- Latitude e longitude.
+- Disponibilidade para novos agendamentos.
+
+### Dashboard
+
+O painel administrativo disponibiliza informações sobre:
+
+- Agendamentos.
+- Clientes.
+- Barbeiros.
+- Serviços.
+- Caixa.
+- Avaliações.
+- Indicadores operacionais.
+- Relatórios.
+
+### Relatórios
+
+- Indicadores de clientes.
+- Indicadores da equipe.
+- Dados de agendamentos.
+- Análises operacionais.
+- Exportação de agendamentos para planilhas.
+
+### Planos e licenças
+
+O Régua Máxima possui um sistema próprio de licenciamento.
+
+Planos disponíveis:
+
+- `BASIC`
+- `PRO`
+- `PREMIUM`
+
+Estados possíveis de uma licença:
+
+- `AVAILABLE`
+- `CLAIMED`
+- `ACTIVE`
+- `REVOKED`
+
+O sistema permite:
+
+- Gerar licenças.
+- Definir plano.
+- Definir período de validade.
+- Associar licença a um usuário.
+- Associar licença a uma barbearia.
+- Revogar licenças.
+- Consultar status e vencimento.
+- Armazenar as chaves protegidas por hash.
+
+## Perfis do sistema
+
+### Cliente
+
+O cliente pode:
+
+- Criar uma conta.
+- Fazer login.
+- Buscar barbearias.
+- Visualizar serviços e profissionais.
+- Agendar horários.
+- Consultar os próprios agendamentos.
+- Cancelar agendamentos.
+- Favoritar estabelecimentos.
+- Avaliar barbeiros.
+- Avaliar barbearias.
+- Configurar perfil e aparência.
+
+### Barbeiro
+
+O barbeiro pode:
+
+- Criar perfil profissional.
+- Participar de uma barbearia.
+- Receber convites.
+- Gerenciar portfólio.
+- Consultar agenda.
+- Visualizar avaliações recebidas.
+
+### Proprietário
+
+O proprietário possui acesso ao dashboard da barbearia e pode:
+
+- Gerenciar agenda.
+- Gerenciar serviços.
+- Gerenciar barbeiros.
+- Controlar o caixa.
+- Consultar relatórios.
+- Gerenciar o perfil público.
+- Administrar imagens.
+- Configurar horários.
+- Controlar novos agendamentos.
+- Consultar plano e licença.
+
+### Administrador de licenças
+
+Usuários autorizados podem:
+
+- Gerar licenças.
+- Escolher o plano.
+- Definir validade.
+- Consultar status.
+- Revogar licenças.
+- Associar licenças a usuários e barbearias.
+
+## Banco de dados
+
+O schema principal está localizado em:
 
 ```text
-barber-cloud/
-├── app/
-│   ├── _actions/            # Server Actions e regras de mutação
-│   ├── _components/         # Componentes de interface e domínio
-│   ├── _emails/             # Templates de e-mail
-│   ├── _hooks/              # Hooks reutilizáveis
-│   ├── _lib/                # Banco, autenticação e serviços
-│   ├── _providers/          # Providers globais
-│   ├── admin/               # Administração de licenças
-│   ├── api/                 # Route Handlers
-│   ├── dashboard/           # Painel da barbearia
-│   ├── barbershops/         # Listagem e perfil público
-│   └── ...                  # Demais páginas da aplicação
-├── prisma/
-│   ├── migrations/          # Histórico de alterações do banco
-│   ├── schema.prisma        # Modelagem principal
-│   └── seed.ts              # Dados iniciais
-├── public/                  # Imagens e arquivos públicos
-├── prisma.config.ts         # Configuração do Prisma
-└── next.config.ts           # Configuração do Next.js
+barber-cloud/prisma/schema.prisma
 ```
 
-### Principais entidades
+Entre as principais entidades do sistema estão:
 
-- `User`: conta, autenticação e papel do usuário.
-- `Client`: perfil do cliente.
-- `Barber`: perfil profissional e vínculo com a barbearia.
-- `Barbershop`: estabelecimento e dados públicos.
-- `BarbeshopService`: catálogo de serviços.
-- `Booking`: agendamento e seu ciclo de atendimento.
-- `Payment`: pagamento associado a um agendamento.
-- `CashMovement`: entradas e saídas do caixa.
-- `Review` e `BarbershopReview`: avaliações.
-- `BarbershopInvite`: convites para a equipe.
-- `PlanLicense`: plano, ativação e validade da licença.
+- `User` — autenticação e dados da conta.
+- `Client` — perfil do cliente.
+- `Barber` — perfil profissional.
+- `Barbershop` — estabelecimento.
+- `BarbeshopService` — serviços da barbearia.
+- `Booking` — agendamentos.
+- `Payment` — pagamentos.
+- `CashMovement` — movimentações do caixa.
+- `Review` — avaliações dos barbeiros.
+- `BarbershopReview` — avaliações das barbearias.
+- `BarbershopInvite` — convites para a equipe.
+- `PlanLicense` — planos e licenças.
 
-## ✅ Pré-requisitos
+## Pré-requisitos
 
-- Node.js compatível com o Next.js 16.
+Para executar o projeto localmente:
+
+- Node.js compatível com Next.js 16.
 - npm.
-- Banco PostgreSQL.
-- Projeto no Supabase para armazenamento de imagens.
-- Conta no Resend para envio de e-mails.
-- Credenciais OAuth dos provedores que serão habilitados.
+- PostgreSQL.
+- Banco PostgreSQL no Neon ou serviço equivalente.
+- Projeto Supabase para armazenamento de imagens.
+- Conta no Resend.
+- Credenciais OAuth dos provedores que serão utilizados.
 
-## ⚙️ Variáveis de ambiente
+## Variáveis de ambiente
 
-Crie um arquivo `.env` na raiz de `barber-cloud`. Nunca envie esse arquivo para
-o repositório.
+Crie um arquivo `.env` dentro de:
+
+```text
+barber-cloud/.env
+```
+
+Nunca versione esse arquivo.
 
 ```env
 # Banco de dados
@@ -239,7 +337,7 @@ DATABASE_URL="postgresql://usuario:senha@host/banco?sslmode=require"
 
 # NextAuth
 NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="gere-um-segredo-forte"
+NEXTAUTH_SECRET=""
 
 # Google OAuth
 GOOGLE_CLIENT_ID=""
@@ -257,116 +355,169 @@ FACEBOOK_CLIENT_SECRET=""
 NEXT_PUBLIC_SUPABASE_URL=""
 SUPABASE_URL=""
 SUPABASE_SECRET_KEY=""
-# Alternativa compatível:
+
+# Alternativa compatível
 SUPABASE_SERVICE_ROLE_KEY=""
 
-# E-mails
+# Resend
 RESEND_API_KEY=""
 
 # Administração de licenças
 LICENSE_ADMIN_EMAILS="administrador@exemplo.com"
-# Somente para uso temporário fora de produção:
+
+# Apenas para desenvolvimento
 LICENSE_PUBLIC_GENERATOR="false"
 ```
 
-> Gere o `NEXTAUTH_SECRET` com uma fonte criptograficamente segura e mantenha
-> todas as chaves privadas somente no servidor.
+O `NEXTAUTH_SECRET` deve ser gerado utilizando uma fonte criptograficamente segura.
 
-## 💻 Executando localmente
+Nunca compartilhe:
 
-### 1. Clone o repositório
+- `DATABASE_URL`.
+- `NEXTAUTH_SECRET`.
+- Segredos OAuth.
+- `SUPABASE_SECRET_KEY`.
+- `SUPABASE_SERVICE_ROLE_KEY`.
+- `RESEND_API_KEY`.
+
+## Rodando em desenvolvimento
+
+Clone o repositório:
 
 ```bash
-git clone https://github.com/kaiocotrim/ReguaMaximum.git
-cd ReguaMaximum/barber-cloud
+git clone https://github.com/kaiocotrim/ReguaMaxima.git
+cd ReguaMaxima/barber-cloud
 ```
 
-### 2. Instale as dependências
+Instale as dependências:
 
 ```bash
 npm install
 ```
 
-O script `postinstall` gera automaticamente o Prisma Client.
+O `postinstall` gera automaticamente o Prisma Client.
 
-### 3. Configure o ambiente
+Configure o arquivo:
 
-Crie o arquivo `.env` usando a seção de variáveis acima e informe credenciais
-válidas para os serviços usados.
-
-### 4. Prepare o banco
-
-Em um banco novo:
-
-```bash
-npx prisma migrate deploy
-npx prisma generate
+```text
+.env
 ```
 
-Para popular dados de desenvolvimento, quando aplicável:
+Depois prepare o banco de dados:
+
+```bash
+npx prisma generate
+npx prisma migrate deploy
+```
+
+Opcionalmente, carregue os dados iniciais:
 
 ```bash
 npx prisma db seed
 ```
 
-> Antes de executar migrations em um banco existente, confira
-> `npx prisma migrate status` e valide o histórico para evitar conflitos.
-
-### 5. Inicie o projeto
+Inicie o servidor:
 
 ```bash
 npm run dev
 ```
 
-Acesse [http://localhost:3000](http://localhost:3000).
+A aplicação ficará disponível em:
 
-## 📜 Scripts
+```text
+http://localhost:3000
+```
+
+## Scripts principais
 
 | Comando | Descrição |
 | --- | --- |
-| `npm run dev` | Inicia o servidor de desenvolvimento |
+| `npm run dev` | Inicia o ambiente de desenvolvimento |
 | `npm run build` | Gera o Prisma Client e cria o build de produção |
 | `npm run start` | Executa o build de produção |
-| `npm run lint` | Analisa o código com ESLint |
-| `npm run postinstall` | Gera o Prisma Client após a instalação |
+| `npm run lint` | Executa o ESLint |
+| `npm run postinstall` | Gera automaticamente o Prisma Client |
 | `npm run prepare` | Configura os hooks do Husky |
 
-## 🗺️ Rotas principais
+## Rotas principais
 
-| Rota | Finalidade |
+| Rota | Descrição |
 | --- | --- |
 | `/` | Página inicial e descoberta |
-| `/login` | Autenticação |
+| `/login` | Login |
 | `/barbershops` | Lista de barbearias |
 | `/barbershops/[id]` | Perfil público da barbearia |
 | `/appointments` | Agendamentos do cliente |
 | `/favorites` | Barbearias favoritas |
 | `/perfil` | Perfil do usuário |
-| `/configuracoes` | Dados pessoais e aparência |
-| `/ajuda` | Manual do sistema |
+| `/configuracoes` | Configurações da conta |
+| `/ajuda` | Central de ajuda |
 | `/minha-barbearia` | Criação e ativação da barbearia |
-| `/dashboard` | Painel do proprietário |
-| `/dashboard/agendamentos` | Gestão da agenda |
+| `/dashboard` | Dashboard do proprietário |
+| `/dashboard/agendamentos` | Agenda e atendimentos |
 | `/dashboard/servicos` | Gestão de serviços |
 | `/dashboard/barbeiros` | Gestão da equipe |
 | `/dashboard/caixa` | Controle financeiro |
-| `/dashboard/relatorios` | Indicadores e relatórios |
-| `/dashboard/perfil` | Fotos e avaliações da barbearia |
-| `/dashboard/configuracoes` | Dados públicos, agenda e licença |
-| `/admin/licencas` | Administração protegida de licenças |
+| `/dashboard/relatorios` | Relatórios e indicadores |
+| `/dashboard/perfil` | Perfil público e avaliações |
+| `/dashboard/configuracoes` | Configurações da barbearia |
+| `/admin/licencas` | Administração de licenças |
 
-## 🔐 Segurança
+## Fluxo de agendamento
 
-- Senhas armazenadas com hash usando bcrypt.
+```mermaid
+flowchart LR
+    CLIENTE[Cliente]
+    BARBEARIA[Barbearia]
+    SERVICO[Serviço]
+    BARBEIRO[Barbeiro]
+    HORARIO[Data e horário]
+    BOOKING[Agendamento]
+    ATENDIMENTO[Atendimento]
+    PAYMENT[Pagamento]
+    REVIEW[Avaliação]
+
+    CLIENTE --> BARBEARIA
+    BARBEARIA --> SERVICO
+    SERVICO --> BARBEIRO
+    BARBEIRO --> HORARIO
+    HORARIO --> BOOKING
+    BOOKING --> ATENDIMENTO
+    ATENDIMENTO --> PAYMENT
+    PAYMENT --> REVIEW
+```
+
+O fluxo principal funciona da seguinte forma:
+
+1. O cliente encontra uma barbearia.
+2. Seleciona um serviço.
+3. Escolhe um barbeiro.
+4. Escolhe data e horário.
+5. O sistema cria o agendamento.
+6. O atendimento aparece na agenda da barbearia.
+7. O profissional realiza o atendimento.
+8. O proprietário registra o pagamento.
+9. A movimentação é registrada no caixa.
+10. O cliente pode avaliar o profissional e a barbearia.
+
+## Segurança
+
+O projeto utiliza diferentes mecanismos de proteção:
+
+- Senhas armazenadas com hash usando `bcrypt`.
 - Sessões protegidas pelo NextAuth.
-- Autenticação e autorização verificadas novamente em Server Actions.
-- Consultas administrativas limitadas ao proprietário da barbearia.
+- Autenticação validada no servidor.
+- Autorização verificada novamente em Server Actions.
+- Controle de acesso às informações da barbearia.
+- Área administrativa de licenças protegida.
 - Chaves de licença armazenadas por hash.
-- Rate limiting em fluxos sensíveis.
-- Segredos mantidos em variáveis de ambiente.
-- Campos sensíveis do usuário omitidos pelo Prisma Client.
+- Rate limiting em operações sensíveis.
+- Credenciais armazenadas em variáveis de ambiente.
+- Campos sensíveis omitidos em consultas do Prisma.
 
-## 🧪 Validação antes de publicar
+## Validação antes de publicar
+
+Execute:
 
 ```bash
 npm run lint
@@ -375,54 +526,80 @@ npm run build
 
 Também valide:
 
-- migrations no banco de destino;
-- login por credenciais e provedores OAuth;
-- upload e exibição de imagens;
-- envio de e-mails;
-- criação e conclusão de agendamentos;
-- pagamentos e caixa;
-- ativação e vencimento de licenças;
-- comportamento nos temas claro e escuro;
-- navegação em telas móveis.
+- Login por credenciais.
+- Login com Google.
+- Login com GitHub.
+- Login com Facebook.
+- Criação de conta.
+- Criação de barbearia.
+- Upload de imagens.
+- Cadastro de serviços.
+- Convites de barbeiros.
+- Criação de agendamentos.
+- Cancelamento de agendamentos.
+- Conclusão de atendimentos.
+- Registro de pagamentos.
+- Movimentações do caixa.
+- Avaliações.
+- Exportação de relatórios.
+- Envio de e-mails.
+- Ativação de licenças.
+- Expiração de licenças.
+- Tema claro e escuro.
+- Responsividade em dispositivos móveis.
 
-## 🚢 Publicação
+## Publicação
 
-1. Configure todas as variáveis no provedor de hospedagem.
-2. Use um banco PostgreSQL com SSL.
-3. Execute `npx prisma migrate deploy`.
-4. Gere o build com `npm run build`.
-5. Inicie com `npm run start`.
-6. Atualize `NEXTAUTH_URL` para a URL pública.
-7. Cadastre a URL pública nos provedores OAuth.
+Antes de publicar:
 
-## 🤝 Contribuição
-
-Este é um software proprietário. Contribuições não concedem direito de uso,
-cópia ou redistribuição do projeto. Para colaborar, solicite autorização ao
-titular e trabalhe em uma branch específica:
+1. Configure todas as variáveis de ambiente no provedor de hospedagem.
+2. Utilize PostgreSQL com SSL.
+3. Execute as migrations do Prisma.
+4. Configure corretamente as URLs de OAuth.
+5. Configure o domínio autorizado no Supabase.
+6. Configure o domínio no Resend.
+7. Valide os callbacks do NextAuth.
+8. Execute o build de produção.
 
 ```bash
-git switch -c tipo/descricao-da-alteracao
+npm run build
+npm run start
 ```
 
-Antes de enviar uma alteração:
+## Experiência da aplicação
 
-- preserve as regras de autorização;
-- não inclua credenciais;
-- execute lint e build;
-- documente migrations e novas variáveis;
-- descreva claramente o comportamento alterado.
+O Régua Máxima possui:
 
-## 📞 Suporte
+- Interface responsiva.
+- Tema claro e escuro.
+- Componentes acessíveis.
+- Feedback visual para ações.
+- Toasts e notificações.
+- Animações de interface.
+- Suporte a `prefers-reduced-motion`.
+- Central de ajuda integrada.
 
-- Central de Ajuda: `/ajuda`
-- E-mail: `equipe@cotrimdev.com.br`
-- Repositório: [github.com/kaiocotrim/ReguaMaximum](https://github.com/kaiocotrim/ReguaMaximum)
+## Objetivo do projeto
 
-## 📄 Licença
+O Régua Máxima foi criado para centralizar a operação de uma barbearia em uma única plataforma, reduzindo controles manuais e oferecendo uma experiência moderna tanto para clientes quanto para profissionais.
 
-Copyright © 2026 Kaio Cotrim. Todos os direitos reservados.
+A plataforma busca simplificar:
 
-Este projeto é **proprietário** e não é software de código aberto. Consulte o
-arquivo [LICENSE](./LICENSE) para conhecer os termos de uso, cópia,
-modificação e distribuição.
+- Agendamentos.
+- Gestão de clientes.
+- Gestão da equipe.
+- Catálogo de serviços.
+- Controle financeiro.
+- Reputação digital.
+- Relatórios.
+- Presença online.
+
+## Licença
+
+Consulte o arquivo:
+
+```text
+LICENSE
+```
+
+para informações sobre os termos de uso do projeto.
